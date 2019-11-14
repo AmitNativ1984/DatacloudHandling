@@ -1,4 +1,3 @@
-from connect import establish_connection
 import argparse
 import boto3
 import datetime
@@ -18,9 +17,12 @@ def get_s3_directories(s3, bucket_name):
     logging.info("retrieving s3 folders and subfolders")
     parent_folders = s3.list_objects(Bucket=bucket_name, Delimiter="/")["CommonPrefixes"]
     for folder in parent_folders:
-        folder["Children"] = [path["Prefix"].split("/")[1]
-                              for path in s3.list_objects(Bucket=bucket_name, Prefix=folder["Prefix"], Delimiter="/")[
-                                  "CommonPrefixes"]]
+        try:
+            folder["Children"] = [path["Prefix"].split("/")[1]
+                                  for path in s3.list_objects(Bucket=bucket_name, Prefix=folder["Prefix"], Delimiter="/")[
+                                      "CommonPrefixes"]]
+        except Exception:
+            logging.info("folder {} did not have sub folders".format(folder["Prefix"]))
 
     logging.info("done...")
     return parent_folders
@@ -137,17 +139,6 @@ def main():
                         help='number of samples to randomly copy from source bucket to dest bucket')
 
     args, unknown_args = parser.parse_known_args()
-
-
-    # bucket_name = "c4i-datasets"
-    # date = "2019-07-01"
-    # rgb_file_prefix = ["Day", "jp2"]
-    # ID_fixed_prefix = ["ID_fixed", "png"]
-    # night_cam_prefix = ["Night", "jp2"]
-    # velodyne_prefix = ["Velodyne", "ply.gz"]
-    # n_samples = 1000
-    # destBucket = "dataloop-annotations"
-    #
 
     metadata = {"tagging_status": "sent_for_tagging"}
 
