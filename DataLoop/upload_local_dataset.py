@@ -40,7 +40,4 @@ if __name__ == "__main__":
         new_dataset.items.upload(local_path=curr_path[0])
         logging.info("successfully updated all files from {}".format(curr_path[0]))
 
-    logging.info("uploading files...")
-    new_dataset.items.upload(local_path=r"/home/amit/Data/dataloop_for_tagging/elyakim/2019-07-03_143524-compressed/*")
-
     logging.info("finished uploading files")

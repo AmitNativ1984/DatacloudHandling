@@ -7,8 +7,8 @@ from tqdm import tqdm
 import numpy as np
 
 import logging
-# FORMAT = "[%(asctime)s][%(levelname)s][%(pathname)s][%(funcName)s] %(message)s"
-# logging.basicConfig(level=logging.INFO, format=FORMAT)
+FORMAT = "[%(asctime)s][%(levelname)s][%(pathname)s][%(funcName)s] %(message)s"
+logging.basicConfig(level=logging.INFO, format=FORMAT)
 logging.getLogger(__name__)
 
 
@@ -53,14 +53,17 @@ def filter_folders_names_by_date(folders, date):
 
     return folders
 
-def create_full_rgb_paths(s3, bucket_name, folders, rgb_file_prefix):
+def create_full_bucket_paths(s3, bucket_name, folders, file_prefix=None):
     """
         returns a list of all files in s3 bucket.
         s3 - s3 bucket
         folders - list of all valid paths (prefixes) in bucket
-        rgb_file_prefix - list;  prefix to all rgb image files.
+        file_prefix - list;  prefix to all rgb image files.
     """
     paths = []
+    if file_prefix is None:
+        file_prefix = ""
+
     # creating a list of all subfolders in bucket
     for folder in folders:
         parent = folder["Prefix"]
@@ -72,7 +75,7 @@ def create_full_rgb_paths(s3, bucket_name, folders, rgb_file_prefix):
     pbar = tqdm(paths)
     pbar.set_description("collecting rgb images paths")
     for path in pbar:
-        filenames = s3.list_objects(Bucket=bucket_name, Prefix=path + "/" + rgb_file_prefix)["Contents"]
+        filenames = s3.list_objects(Bucket=bucket_name, Prefix=path + "/" + file_prefix)["Contents"]
         rgb_path = [f["Key"] for f in filenames]
         bucket_rgb_paths += rgb_path
 
@@ -157,7 +160,7 @@ def main():
 
     folders = filter_folders_names_by_date(folders, args.from_date)
 
-    rgb_images_path = create_full_rgb_paths(s3, args.source_bucket_name, folders, args.rgb_file_prefix[0])
+    rgb_images_path = create_full_bucket_paths(s3, args.source_bucket_name, folders, args.rgb_file_prefix[0])
 
     # randomly select rgb_images paths
     sampled_rgb_paths = np.random.choice(rgb_images_path, size=args.n_samples, replace=False)
