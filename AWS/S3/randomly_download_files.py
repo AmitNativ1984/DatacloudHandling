@@ -5,6 +5,7 @@ import time
 import os
 from tqdm import tqdm
 import numpy as np
+import random
 
 import logging
 FORMAT = "[%(asctime)s][%(levelname)s][%(pathname)s][%(funcName)s] %(message)s"
@@ -12,10 +13,10 @@ logging.basicConfig(level=logging.INFO, format=FORMAT)
 logging.getLogger(__name__)
 
 
-def get_s3_directories(s3, bucket_name):
+def get_s3_directories(s3, bucket_name, prefix=""):
     # get list of folders subfolders inside bucket
     logging.info("retrieving s3 folders and subfolders")
-    parent_folders = s3.list_objects(Bucket=bucket_name, Delimiter="/")["CommonPrefixes"]
+    parent_folders = s3.list_objects(Bucket=bucket_name, Prefix=prefix, Delimiter="/")["CommonPrefixes"]
     for folder in parent_folders:
         try:
             folder["Children"] = [path["Prefix"].split("/")[1]
@@ -76,7 +77,7 @@ def create_full_bucket_paths(s3, bucket_name, folders, file_prefix=None):
     pbar.set_description("collecting rgb images paths")
     for path in pbar:
         filenames = s3.list_objects(Bucket=bucket_name, Prefix=path + "/" + file_prefix)["Contents"]
-        rgb_path = [f["Key"] for f in filenames]
+        # rgb_path = [f["Key"] for f in filenames if ]
         bucket_rgb_paths += rgb_path
 
     logging.info("total of {} images found".format(len(bucket_rgb_paths)))
@@ -112,34 +113,26 @@ def copy_path_to_different_bucket(s3, sourceBucket, sourcePath, destBucket, meta
     return success
 
 def main():
-    parser = argparse.ArgumentParser(description="randomly select files from S3 bucket", fromfile_prefix_chars="@")
+    parser = argparse.ArgumentParser(description="randomly download files from S3 bucket", fromfile_prefix_chars="@")
 
-    parser.add_argument('--source-bucket-name', type=str,
+    parser.add_argument('--source-bucket', type=str,
                         required=True,
                         help='S3 source bucket name')
 
-    parser.add_argument('--dest-bucket-name', type=str,
+    parser.add_argument('--local-path', type=str,
                         required=True,
-                        help='S3 destination bucket name (files will be copied here)')
+                        help='local path (files will be downloaded here)')
+
+    parser.add_argument('--prefix', type=str, default="",
+                        required=True,
+                        help='prefix to fileter inside source bucket')
 
     parser.add_argument('--from-date', type=str, default=None,
                         help='filter all S3 object after this date')
 
-    parser.add_argument('--rgb-file-prefix', type=str, nargs='+',
-                        required=True,
-                        help='<list> rgb files name stamp and file type: RGBPrefix_***.jp2 --> RGBPrefix jpg2')
-
-    parser.add_argument('--night-cam-prefix', type=str, nargs='+',
-                        required=True,
-                        help='<list> night cam files name stamp and file type: NightCamPrefix_***.bmp --> NightCamPrefix bmp')
-
-    parser.add_argument('--velodyne-prefix', type=str, nargs='+',
-                        required=True,
-                        help='<list> velodyne files name stamp and file type: VelodynePrefix_***.ply.gz --> VelodynePrefix ply.gz')
-
     parser.add_argument('--n-samples', type=int,
                         required=True,
-                        help='number of samples to randomly copy from source bucket to dest bucket')
+                        help='number of samples to randomly download from source bucket to local folder')
 
     args, unknown_args = parser.parse_known_args()
 
@@ -150,35 +143,61 @@ def main():
 
     # get bucket
     try:
-        bucket_head = s3.head_bucket(Bucket=args.source_bucket_name)
-        logging.info("connected to bucket: {}".format(args.source_bucket_name))
+        bucket_head = s3.head_bucket(Bucket=args.source_bucket)
+        logging.info("connected to bucket: {}".format(args.source_bucket))
 
     except Exception:
-        logging.error("{} bucket does not exist".format(args.source_bucket_name))
+        logging.error("{} bucket does not exist".format(args.source_bucket))
 
-    folders = get_s3_directories(s3, args.source_bucket_name)
+    logging.info("retrieving all file names in bucket...")
 
-    folders = filter_folders_names_by_date(folders, args.from_date)
+    paginator = s3.get_paginator("list_objects")
+    page_iterator = paginator.paginate(Bucket=args.source_bucket, Prefix=args.prefix)
 
-    rgb_images_path = create_full_bucket_paths(s3, args.source_bucket_name, folders, args.rgb_file_prefix[0])
+    batch = 1
+    objects_full_list = []
+    pbar = tqdm(page_iterator, desc="[batch {}]".format(batch), position=0, leave=True)
+    for page in pbar:
 
-    # randomly select rgb_images paths
-    sampled_rgb_paths = np.random.choice(rgb_images_path, size=args.n_samples, replace=False)
-    logging.info("randomly selected {} rgb images from all valid filtered rgb images paths in bucket".format(args.n_samples))
+        objects = page["Contents"]
 
-    sampled_night_cam_paths, sampled_velodyne_paths = collect_matching_nightCam_Velodyne(sampled_rgb_paths,
-                                                                                         args.rgb_file_prefix,
-                                                                                         args.night_cam_prefix,
-                                                                                         args.velodyne_prefix)
+        # filtering files if required
+        paths = [f["Key"] for f in objects]
+        objects_full_list += paths
 
-    logging.info("copying RGB images")
-    copy_path_to_different_bucket(s3, args.source_bucket_name, sampled_rgb_paths, args.dest_bucket_name, metadata=metadata)
-    logging.info("copying night cam images")
-    copy_path_to_different_bucket(s3, args.source_bucket_name, sampled_night_cam_paths, args.dest_bucket_name, metadata=metadata)
-    logging.info("copying velodyne images")
-    copy_path_to_different_bucket(s3, args.source_bucket_name, sampled_velodyne_paths, args.dest_bucket_name, metadata=metadata)
+        pbar.set_description("[batch {}]".format(batch))
+        pbar.set_postfix_str("total_files: {}".format(len(objects_full_list)))
+        pbar.update()
+        batch += 1
 
     logging.info("done...")
+
+    logging.info("selecting {} random objects from {}".format(args.n_samples, args.source_bucket))
+    random.shuffle(objects_full_list)
+
+    selected_objects_keys = objects_full_list[:min(len(objects_full_list), args.n_samples)]
+
+    # downloading selected files
+    # downloading all objects
+    pbar = tqdm(total=len(selected_objects_keys))
+    pbar.set_description("downloading files")
+    for key in selected_objects_keys:
+        # get object path and make sure local folders have been created
+        objPath, objFile = os.path.split(key)
+        localPath = os.path.join(args.local_path, objPath)
+
+        os.makedirs(localPath, exist_ok=True)
+
+        # download object from s3 bucket to local
+        localFullPath = os.path.join(localPath, objFile)
+        s3.download_file(args.source_bucket, key, localFullPath)
+        s3.delete_object(Bucket=args.source_bucket, Key=key)
+        pbar.set_postfix(file=os.path.join(args.source_bucket, objPath, objFile))
+        pbar.update()
+
+    logging.info("finished downloading all files")
+
+
 
     logging.info(10 * "=" + " finished " + 10 * "=")
 

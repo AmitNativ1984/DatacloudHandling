@@ -47,6 +47,9 @@ if __name__ == "__main__":
         logging.error("{} bucket does not exist".format(args.bucket))
 
     # get a list of all files in bucket
+
+
+
     objectKeys = [f["Key"] for f in s3.list_objects(Bucket=args.bucket, Prefix=args.prefix)["Contents"]]
 
     # downloading all objects

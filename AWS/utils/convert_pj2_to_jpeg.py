@@ -6,10 +6,17 @@ converts all images of type *.jp2 to *.jpg
 from PIL import Image
 import os
 from tqdm import tqdm
-
+import argparse
 
 if __name__ == "__main__":
-    source_path = r"/home/amit/Data/dataloop_for_tagging"
+    parser = argparse.ArgumentParser(description="convert jp2 to jpg", fromfile_prefix_chars="@")
+
+    parser.add_argument('--source', type=str,
+                        required=True,
+                        help='all files under this folder and its subfolders will be converted')
+
+    args = parser.parse_args()
+    source_path = args.source
     for curr_path in os.walk(source_path):
         # check files do exist in current path
         files = curr_path[-1]
