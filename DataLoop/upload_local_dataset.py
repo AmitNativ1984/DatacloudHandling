@@ -25,8 +25,15 @@ if __name__ == "__main__":
 
     # upload the entire local input folder to dest location on dataloop server
     project = dl.projects.get(project_name="Elbit")
-    new_dataset = project.datasets.create(dataset_name=args.dest_dataloop_path)
-    logging.info("successfully created following path on dataloop folder: {}".format(args.dest_dataloop_path))
+
+
+    try:
+        dataset = project.datasets.get(dataset_name=args.dest_dataloop_path)
+        logging.info("dataset {} found".format(args.dest_dataloop_path))
+
+    except Exception:
+        dataset = project.datasets.create(dataset_name=args.dest_dataloop_path)
+        logging.info("successfully created new dataset with following name: {}".format(args.dest_dataloop_path))
 
     # go down tree of local dataset and upload all files. keeping tree structure
     for curr_path in os.walk(args.source):
@@ -37,7 +44,7 @@ if __name__ == "__main__":
 
         remote_subfolder = curr_path[0].split(args.source)[-1]
         # upload all files in subfolder:
-        new_dataset.items.upload(local_path=curr_path[0])
+        dataset.items.upload(local_path=curr_path[0])
         logging.info("successfully updated all files from {}".format(curr_path[0]))
 
     logging.info("finished uploading files")

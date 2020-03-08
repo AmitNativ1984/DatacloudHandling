@@ -125,7 +125,10 @@ def main():
 
     parser.add_argument('--prefix', type=str, default="",
                         required=True,
-                        help='prefix to fileter inside source bucket')
+                        help='prefix to filter inside source bucket')
+
+    parser.add_argument('--delimiter', type=str, default="",
+                        help='delimiter to filter inside source bucket')
 
     parser.add_argument('--from-date', type=str, default=None,
                         help='filter all S3 object after this date')
@@ -133,6 +136,9 @@ def main():
     parser.add_argument('--n-samples', type=int,
                         required=True,
                         help='number of samples to randomly download from source bucket to local folder')
+
+    parser.add_argument('--common-str', type=str, default='',
+                        help='common str to all filenames')
 
     args, unknown_args = parser.parse_known_args()
 
@@ -152,21 +158,24 @@ def main():
     logging.info("retrieving all file names in bucket...")
 
     paginator = s3.get_paginator("list_objects")
-    page_iterator = paginator.paginate(Bucket=args.source_bucket, Prefix=args.prefix)
+    page_iterator = paginator.paginate(Bucket=args.source_bucket, Prefix=args.prefix, Delimiter=args.delimiter)
 
     batch = 1
     objects_full_list = []
     pbar = tqdm(page_iterator, desc="[batch {}]".format(batch), position=0, leave=True)
     for page in pbar:
 
+
         objects = page["Contents"]
 
         # filtering files if required
         paths = [f["Key"] for f in objects]
-        objects_full_list += paths
+        img_paths = [img_path for img_path in paths if args.common_str in img_path and (img_path.endswith('jp2') or img_path.endswith('bmp'))]
+
+        objects_full_list += img_paths
 
         pbar.set_description("[batch {}]".format(batch))
-        pbar.set_postfix_str("total_files: {}".format(len(objects_full_list)))
+        pbar.set_postfix_str("total_image_files: {}".format(len(objects_full_list)))
         pbar.update()
         batch += 1
 
