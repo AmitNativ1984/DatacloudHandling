@@ -28,8 +28,6 @@ if __name__ == "__main__":
                         required=True,
                         help='local path to where files will be downloaded')
 
-
-
     parser.add_argument('--filter', type=str,
                         help='sub string that must be part of downloaded s3 object name')
 
@@ -50,7 +48,7 @@ if __name__ == "__main__":
 
 
 
-    objectKeys = [f["Key"] for f in s3.list_objects(Bucket=args.bucket, Prefix=args.prefix)["Contents"]]
+    objectKeys = [f["Key"] for f in s3.list_objects_v2(Bucket=args.bucket, Prefix=args.prefix)["Contents"]]
 
     # downloading all objects
     pbar = tqdm(total=len(objectKeys))
@@ -58,7 +56,7 @@ if __name__ == "__main__":
     for objKey in objectKeys:
         # get object path and make sure local folders have been created
         objPath, objFile =os.path.split(objKey)
-        localPath = os.path.join(args.local_path, objPath)
+        localPath = args.local_path
 
 
         if args.filter is not None:
