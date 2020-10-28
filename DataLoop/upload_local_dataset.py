@@ -5,12 +5,6 @@ import dtlpy as dl
 import os
 import argparse
 from DataLoop import establish_dataloop_connection
-import logging
-import cv2
-
-# logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(name=__name__)
-logger.setLevel(logging.INFO)
 
 img_file_types = ['.bmp', '.jpg', '.tif', '.tiff']
 
