@@ -1,3 +1,4 @@
 #!/bin/#!/usr/bin/env bash
-python AWS/S3/download_files.py --bucket c4i-datasets --prefix ben_shemen/13-02-2020/Shvil2/drive_cam1 --local-path /home/amit/Data/Probot_Recordings/BenShemen/13-02-2020/Shvil2/drive_cam1 --filter drive_cam1
-python AWS/S3/download_files.py --bucket c4i-datasets --prefix ben_shemen/13-02-2020/Shvil2/drive_cam2 --local-path /home/amit/Data/Probot_Recordings/BenShemen/13-02-2020/Shvil2/drive_cam2 --filter drive_cam2
+python Dataloop/upload_local_dataset.py --project-name Follow_Me --source D:/DATA/TerraNava/Netanya/2020-23-09/2020_09_23_13_03_38 --dest-dataloop-path Netanya_2020_09_23_13_03_38 --sample-rate 5
+python Dataloop/upload_local_dataset.py --project-name Follow_Me --source D:/DATA/TerraNava/Netanya/2020-10-14/FM/2020_10_14_13_09_38 --dest-dataloop-path Netanya_2020_10_14_13_09_38 --sample-rate 5
+python Dataloop/upload_local_dataset.py --project-name Follow_Me --source D:/DATA/TerraNava/Netanya/2020-10-14/FM/2020_10_14_12_12_45 --dest-dataloop-path Netanya_2020_10_14_12_12_45 --sample-rate 5
