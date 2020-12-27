@@ -1,7 +1,6 @@
 import dtlpy as dl
 import os
 import argparse
-from DataLoop import establish_dataloop_connection
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -26,8 +25,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(args)
     # connect to dataloop server
-    establish_dataloop_connection(args)
-
+    dl.verbose.logging_level = dl.VerboseLoggingLevel.WARNING
     # upload the entire local input folder to dest location on dataloop server
     project = dl.projects.get(project_name=args.project_name)
 
@@ -41,7 +39,7 @@ if __name__ == "__main__":
         logging.info("successfully created new dataset with following name: {}".format(args.dest_dataloop_path))
 
     # downloading images
-    dataset.items.download(local_path=args.local_dest, annotation_options='box')
+    dataset.items.download(local_path=args.local_dest, annotation_options='json')
 
     # converting to yolo and downloading
     converter = dl.Converter()
@@ -55,3 +53,6 @@ if __name__ == "__main__":
                               to_format='yolo',
                               local_path=args.local_dest,
                               annotation_filter=filters)
+
+    os.rename(os.path.join(args.local_dest, "items"), os.path.join(args.local_dest, "images"))
+    os.rename(os.path.join(args.local_dest, "yolo"), os.path.join(args.local_dest, "labels"))
