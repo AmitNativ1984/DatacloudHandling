@@ -5,6 +5,7 @@ import dtlpy as dl
 import os
 import argparse
 from DataLoop import establish_dataloop_connection
+dl.verbose.logging_level = dl.VerboseLoggingLevel.WARNING
 
 img_file_types = ['.bmp', '.jpg', '.tif', '.tiff']
 
@@ -26,10 +27,18 @@ if __name__ == "__main__":
                         default=1,
                         help='load every N frame')
 
+    parser.add_argument('--files-start-index', type=int,
+                        default=0,
+                        help='ignore all files below this index')
+
+    parser.add_argument('--files-stop-index', type=int,
+                        default=None,
+                        help='ignore all files below this index')
+
     args = parser.parse_args()
     print(args)
     # connect to dataloop server
-    establish_dataloop_connection()
+    establish_dataloop_connection(args)
 
     # upload the entire local input folder to dest location on dataloop server
     project = dl.projects.get(project_name=args.project_name)
@@ -50,12 +59,15 @@ if __name__ == "__main__":
         files = [f for f in files if os.path.splitext(f)[-1] in img_file_types]
         if not files:
             continue
+        files.sort()
+        if args.files_stop_index is None:
+            args.files_stop_index = len(files)
 
         remote_subfolder = curr_path[0].split(args.source)[-1]
         # upload all files in subfolder:
         files2upload = []
         for n, file in enumerate(files):
-            if n % args.sample_rate != 0:
+            if n % args.sample_rate != 0 or n < args.files_start_index or n > args.files_stop_index:
                 continue
             imgpath = os.path.join(curr_path[0], file)
             files2upload += [imgpath]
