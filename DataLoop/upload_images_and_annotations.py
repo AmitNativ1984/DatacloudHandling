@@ -1,30 +1,49 @@
 import json
 import os
+import argparse
 import dtlpy as dl
-if dl.token_expired():
-    dl.login()
+from DataLoop import establish_dataloop_connection
 
 from tqdm import tqdm
 
-# Get project and dataset
-project = dl.projects.get(project_name='Kzir')
-dataset = project.datasets.get(dataset_name='Lab_2020_03_09')
+if __name__ == '__main__':
 
-images_folder = r'/home/amit/Data/Kzir/Windows/LabWindows/from_dataloop/items/pics'
-annotations_folder = r'/home/amit/Data/Kzir/Windows/LabWindows/from_dataloop/json/pics'
+    parser = argparse.ArgumentParser(description="upload local dataset and yolo annotations")
 
-for _, img_filename in enumerate(tqdm(os.listdir(images_folder))):
-    # get the matching annotations json
-    _, ext = os.path.splitext(img_filename)
-    ann_filename = os.path.join(annotations_folder, img_filename.replace(ext, '.json'))
-    img_filename = os.path.join(images_folder, img_filename)
+    parser.add_argument('--project-name', type=str,
+                        required=True,
+                        help='dataloop project')
+    parser.add_argument('--dataset-name', type=str,
+                        required=True,
+                        help='remote data set name')
+    parser.add_argument('--images-path', type=str,
+                        required=True,
+                        help='remote data set name')
+    parser.add_argument('--labels-path', type=str,
+                        required=True,
+                        help='remote data set name')
+    parser.add_argument('--labels-names', type=str,
+                        required=True,
+                        help='remote data set name')
+    
+    args = parser.parse_args()
+    print(args)
+    establish_dataloop_connection(args)
+    project = dl.projects.get(project_name=args.project_name)
+    try:
+        dataset = project.datasets.get(dataset_name=args.dataset_name)
+        print("dataset {} found".format(args.dataset_name))
 
-    # Upload or get annotations from platform (if already exists)
-    item = dataset.items.upload(local_path=img_filename,
-                                overwrite=False)
-    assert isinstance(item, dl.Item)
-    item.annotations.upload(annotations=ann_filename)
-    # # read annotations from file
-    # with open(ann_filename, 'r') as annotations_file:
-    #     # annotations = json.load(f)
-    #
+    except Exception:
+        dataset = project.datasets.create(dataset_name=args.dataset_name)
+        print("successfully created new dataset with following name: {}".format(args.dataset_name))
+
+
+    converter = dl.Converter()
+    converter.upload_local_dataset(
+        from_format=dl.AnnotationFormat.YOLO,
+        dataset=dataset,
+        local_items_path=args.images_path,
+        local_annotations_path=args.labels_path,
+        local_labels_path=args.labels_names,
+        )
