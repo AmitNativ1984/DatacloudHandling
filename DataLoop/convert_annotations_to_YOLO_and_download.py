@@ -2,6 +2,7 @@ import dtlpy as dl
 import os
 import argparse
 import logging
+from DataLoop import establish_dataloop_connection
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger(__name__)
@@ -25,6 +26,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(args)
     # connect to dataloop server
+    establish_dataloop_connection(args)
+
+
     dl.verbose.logging_level = dl.VerboseLoggingLevel.WARNING
     # upload the entire local input folder to dest location on dataloop server
     project = dl.projects.get(project_name=args.project_name)
