@@ -20,20 +20,23 @@ def verify_yolo_bbox(label_file_org, label_file_new):
         replaced_bboxes = 0
         for line in f.read().splitlines():
             cls_id_org, x0, y0, w, h = line.split(" ")
-            x0 = float(x0)
-            y0 = float(y0)
-            w = float(w)
-            h = float(h)
+            x0 = np.clip(float(x0), 0., 1.)
+            y0 = np.clip(float(y0), 0., 1.)
+            w = np.clip(float(w), 0., 1.)
+            h = np.clip(float(h), 0., 1.)
             cls_id_org = int(cls_id_org)
 
-            dw = min([1 - x0+w/2, x0 - w/2])
-            if dw <= 0:
-                w -= 2 * (np.abs(dw) + 1e-5)
+            if x0 - w/2 <= 0:
+                w -= 1e-5
 
-            dh = min([1 - y0 + h / 2, y0 - h / 2])
-            if dh <= 0:
-                h -= 2 * (np.abs(dh) + 1e-5)
+            if x0 + w/2 >= 1:
+                w -= 1e-5
 
+            if y0 - h / 2 <= 0:
+                h -= 1e-5
+
+            if y0 + h / 2 >= 1:
+                h -= 1e-5
 
             bbox = " ".join([str(int(cls_id_org)), str(x0), str(y0), str(w), str(h)])
             bboxes.append(bbox)
