@@ -67,7 +67,7 @@ if __name__ == "__main__":
         data_train = os.path.join(local_dest, "data_train.txt")
         data_val = os.path.join(local_dest, "data_val.txt")
 
-        train_val_split_ratio = 0.8
+        train_val_split_ratio = 0.8     # train - val ratio: 20%-80% of entire dataset
 
         for counter, label in enumerate(os.listdir(labels_path)):
             label_file = os.path.join(labels_path, label)
