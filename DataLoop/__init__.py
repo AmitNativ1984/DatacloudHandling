@@ -1,4 +1,5 @@
 import dtlpy as dl
+dl.logger.setLevel('INFO')
 import logging
 FORMAT = "[%(asctime)s][%(levelname)s][%(module)s][%(funcName)s] %(message)s"
 logging.basicConfig(level=logging.INFO, format=FORMAT)
