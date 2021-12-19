@@ -8,34 +8,17 @@ logging.basicConfig(level=logging.INFO)
 logging.getLogger(__name__)
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="convert_annotations_to_YOLO_and_download", fromfile_prefix_chars="@")
-
-    parser.add_argument('--project-name', type=str, default="Elbit",
-                        required=True,
-                        help='path to annoations on dataloop server')
-
-    parser.add_argument('--dataset-name', type=str, nargs='+',
-                        required=True,
-                        help='path to annoations on dataloop server')
-
-    parser.add_argument('--local-dest', type=str,
-                        required=True,
-                        help='local path where annoations will be saved')
-
-    args = parser.parse_args()
-    print(args)
-    # connect to dataloop server
-    establish_dataloop_connection(args)
-
-
+def run(project_name, dataset_name, local_folder):
     dl.verbose.logging_level = dl.VerboseLoggingLevel.WARNING
     # upload the entire local input folder to dest location on dataloop server
-    project = dl.projects.get(project_name=args.project_name)
+    project = dl.projects.get(project_name=project_name)
 
+    if dataset_name==['']:
+        datasets = project.datasets.list()
 
     # downloading images
-    for d, dataset_name in enumerate(args.dataset_name):
+    for d, dataset_name in enumerate(datasets):
+        dataset_name = dataset_name.name
         try:
             dataset = project.datasets.get(dataset_name=dataset_name)
             logging.info("dataset {} found".format(dataset_name))
@@ -43,7 +26,7 @@ if __name__ == "__main__":
         except Exception:
             raise("dataset {} not found".format(dataset_name))
 
-        local_dest = os.path.join(args.local_dest, dataset_name)
+        local_dest = os.path.join(local_folder, dataset_name)
         dataset.items.download(local_path=local_dest, annotation_options='json')
 
         # converting to yolo and downloading
@@ -81,3 +64,28 @@ if __name__ == "__main__":
                 else:
                     with open(data_train, 'a+') as txtfile:
                         txtfile.write(image_file + '\n')
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="convert_annotations_to_YOLO_and_download", fromfile_prefix_chars="@")
+
+    parser.add_argument('--project-name', type=str, default="Elbit",
+                        required=True,
+                        help='path to annoations on dataloop server')
+
+    parser.add_argument('--dataset-name', type=str, nargs='+',
+                        default='',
+                        help='path to annoations on dataloop server. If empty, will download all datasets')
+
+    parser.add_argument('--local-dest', type=str,
+                        required=True,
+                        help='local path where annoations will be saved')
+
+    args = parser.parse_args()
+    print(args)
+    # connect to dataloop server
+    establish_dataloop_connection(args)
+    run(args.project_name, args.dataset_name, args.local_dest)
+
+
+    
