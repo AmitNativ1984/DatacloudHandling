@@ -6,7 +6,7 @@ import shutil
 import argparse
 import os
 
-def convert_label_file(label_file_org, label_file_new, cls_org, cls_new):
+def convert_label_file(label_file_org, cls_converter):
     """ convert convert cls ids in cls_org to cls_new.
         remove labels with no matching class in new.
         remove empty label files
@@ -18,19 +18,19 @@ def convert_label_file(label_file_org, label_file_new, cls_org, cls_new):
     with open(label_file_org, 'r') as f:
         replaced_bboxes = 0
         for line in f.read().splitlines():
-            cls_id_org, x0, y0, w, h = line.split(" ")
+            cls_idx_org, x0, y0, w, h = line.split(" ")
 
-            cls_id_org = int(cls_id_org)
-            cls_name_org = [key for key, val in cls_org.items() if val == cls_id_org][0]
-
-            if cls_name_org in cls_new.keys():
-                cls_id_new = cls_new[cls_name_org]
-                bbox = " ".join([str(int(cls_id_new)), str(x0), str(y0), str(w), str(h)])
+            # cls_idx_org = int(cls_idx_org)
+            
+            if cls_idx_org in cls_converter.keys():
+                cls_idx_new = cls_converter[cls_idx_org]
+                bbox = " ".join([str(int(cls_idx_new)), str(x0), str(y0), str(w), str(h)])
                 bboxes.append(bbox)
                 replaced_bboxes += 1
 
+    os.remove(label_file_org)
     if replaced_bboxes > 0:
-        with open(label_file_new, 'w+') as f:
+        with open(label_file_org, 'w+') as f:
             for bbox in bboxes:
                 print(bbox, file=f)
 
@@ -54,28 +54,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # copy original labels folder
-    target_labels = args.source_labels
-    args.source_labels = args.source_labels+"_copy"
-    shutil.copytree(target_labels, args.source_labels)
-    shutil.rmtree(target_labels)
-    os.makedirs(target_labels, exist_ok=True)
-
-    # create dicts for class names:
-    with open(args.cls_org) as f:
-        cls_names = f.read().splitlines()
-    cls_id = list(range(len(cls_names)))
-    cls_org_dict = dict(zip(cls_names, cls_id))
-
-    with open(args.cls_new) as f:
-        cls_names = f.read().splitlines()
-    cls_id = list(range(len(cls_names)))
-    cls_new_dict = dict(zip(cls_names, cls_id))
+    args.cls_org = args.cls_org.split(",")
+    args.cls_new = args.cls_new.split(",")
+    cls_converter = dict(zip(args.cls_org, args.cls_new))
 
     # convert files
     for label_file in os.listdir(args.source_labels):
         convert_label_file(os.path.join(args.source_labels, label_file),
-                           os.path.join(target_labels, label_file),
-                           cls_org_dict,
-                           cls_new_dict)
+                           cls_converter)
         print("converted: {}".format(label_file))
