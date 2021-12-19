@@ -22,12 +22,9 @@
             "program": "${workspaceFolder}/DataLoop/convert_annotations_to_YOLO_and_download.py",
             "console": "integratedTerminal",
             "args": [
-                "--project-name",
-                "Follow_Me",
-                "--dataset-name",
-                "England-2020-25-10",
-                "--local-dest",
-                "/Data/dataloop/Follow_Me"
+                "--project-name", "Follow_Me",
+                "--dataset-name", "",
+                "--local-dest", "/Data/dataloop/Follow_Me"
             ],
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
