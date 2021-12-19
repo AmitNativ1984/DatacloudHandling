@@ -11,10 +11,11 @@ class establish_dataloop_connection:
         # self.email= 'elbit@dataloop.ai'
         # self.Password = 'ElbitDatal@@p!'
 
-        self.email =  # PUT YOUR EMAIL HERE!
-        self.Password =  # PUT YOUR PASSWORD HERE!
+        # self.email =  # PUT YOUR EMAIL HERE!
+        # self.Password =  # PUT YOUR PASSWORD HERE!
 
-        dl.login_secret(self.email, self.Password, self.Client_ID, self.Client_secret)
+        dl.login()
+        # dl.login_secret(self.email, self.Password, self.Client_ID, self.Client_secret)
         logging.info("successfully connected to dataloop server")
         dl.projects.list().print()
 
