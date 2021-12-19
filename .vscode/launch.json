@@ -1,0 +1,37 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: convert cls idx",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/utils/convert_class_idx.py",
+            "console": "integratedTerminal",
+            "args": ["--source-labels", "/Data/coco/yolo/labels/train",
+                     "--cls-org", "1,3,6,7,8",
+                     "--cls-new", "0,1,1,1,1"
+            ]
+        },
+        {
+            "name": "Python: download yolo annotations",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/DataLoop/convert_annotations_to_YOLO_and_download.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--project-name",
+                "Follow_Me",
+                "--dataset-name",
+                "England-2020-25-10",
+                "--local-dest",
+                "/Data/dataloop/Follow_Me"
+            ],
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        }
+    ]
+}
