@@ -1,0 +1,39 @@
+// See https://aka.ms/vscode-remote/devcontainer.json for format details.
+{
+	// "image": "mapcore.azurecr.io/ros2/galactic-tracking_core:latest",
+	"dockerFile": "Dockerfile",
+	"build": {
+		"args": {
+			"BASE_IMAGE": "ubuntu:20.04",
+            "WORKSPACE": "${containerWorkspaceFolder}",		
+		}
+	},
+	"remoteUser": "root",
+	"runArgs": [
+		"--network=host",
+		"--cap-add=SYS_PTRACE",
+		"--security-opt=seccomp:unconfined",
+		"--security-opt=apparmor:unconfined",
+		"--volume=/tmp/.X11-unix:/tmp/.X11-unix",
+		"--volume=/home/${env:USERNAME}/Data:/Data"
+	],
+	"containerEnv": { "DISPLAY": "${localEnv:DISPLAY}" },
+	// Set *default* container specific settings.json values on container create.
+	"settings": {
+		"terminal.integrated.profiles.linux": {
+			"bash": {
+				"path": "bash"
+			},
+		},
+		"terminal.integrated.defaultProfile.linux": "bash"
+	},
+	"name": "dataloop",
+	"extensions": [
+		"ms-azuretools.vscode-docker",
+		"ms-python.python",
+		"ms-vscode.cpptools",
+		"redhat.vscode-yaml",
+		"twxs.cmake",
+		"mhutchie.git-graph"
+	],
+}
