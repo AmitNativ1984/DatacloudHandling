@@ -11,7 +11,7 @@
             "program": "${workspaceFolder}/utils/convert_class_labels.py",
             "console": "integratedTerminal",
             "args": [
-                "--source-labels", "/Data/dataloop/Follow_Me",
+                "--source-labels", "/Data/dataloop/Elbit",
                 "--cls-org", "/Data/dataloop/mapcoreMainRecipe.names",
                 "--cls-new", "/Data/dataloop/cls_new.names"
             ]
@@ -38,12 +38,14 @@
             "program": "${workspaceFolder}/DataLoop/convert_annotations_to_YOLO_and_download.py",
             "console": "integratedTerminal",
             "args": [
-                "--project-name",
-                "Follow_Me",
-                "--dataset-name",
-                "",
-                "--local-dest",
-                "/Data/dataloop/Follow_Me"
+                "--project-name", "Elbit",
+                "--dataset-name", "England_Delivery",
+                                  "Benshemen21012021",
+                                  "february2021",
+                                  "England_05_2021",
+                                  "Holland_072021",
+                                  "Rook_Ein_Hashofet",
+                "--local-dest", "/Data/dataloop/Elbit"
             ],
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
