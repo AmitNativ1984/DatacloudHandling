@@ -16,7 +16,7 @@ def run(project_name, dataset_name, local_folder):
     if dataset_name==['']:
         datasets = project.datasets.list()
     else:
-        datasets = [project.datasets.get(dataset_name=dataset_name)]
+        datasets = [project.datasets.get(dataset_name=name) for name in dataset_name]
 
     # downloading images
     for d, dataset_name in enumerate(datasets):
