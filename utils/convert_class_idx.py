@@ -37,7 +37,7 @@ def convert_label_file(label_file_org, cls_converter):
     return
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="converting cls ids based on class names files new and old (*.names0)",
+    parser = argparse.ArgumentParser(description="converting cls ids based on class names files new and old (*.names)",
                                      fromfile_prefix_chars="@")
 
     parser.add_argument('--source-labels', type=str,
