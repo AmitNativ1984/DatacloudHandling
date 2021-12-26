@@ -42,7 +42,7 @@ def convert_label_file(label_file_org, idx2label_source, label2idx_target):
 
             cls_idx_source = int(cls_idx_source)
             cls_label_source = idx2label_source[cls_idx_source]
-            if cls_idx_source in idx2label_source.keys():
+            if cls_label_source in label2idx_target.keys():
                 cls_idx_target = label2idx_target[cls_label_source]
                 bbox = " ".join([str(int(cls_idx_target)), str(x0), str(y0), str(w), str(h)])
                 bboxes.append(bbox)
